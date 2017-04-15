@@ -3,6 +3,8 @@ package com.example.aswer.gameapp;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -19,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -28,6 +31,10 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -185,7 +192,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
+            mAuthTask = new UserLoginTask(this, email, password);
             mAuthTask.execute((Void) null);
         }
     }
@@ -296,10 +303,32 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      */
     public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
 
+        private final Context mContext;
         private final String mEmail;
         private final String mPassword;
+        private JSONObject worldList = null;
 
-        UserLoginTask(String email, String password) {
+        private static final String exampleString =
+                "{\n" +
+                "\"serverVersion\": \"1.0.\",\n" +
+                "\"allAvailableWorlds\": [\n" +
+                "{\n" +
+                "\"id\": \"118\",\n" +
+                "\"language\": \"de\",\n" +
+                "\"url\": \"http://backend2.lordsandknights.com/XYRALITY/WebObjects/LKWorldServer-DE-15.woa\",\n" +
+                "\"country\": \"DE\",\n" +
+                "\"worldStatus\": {\n" +
+                "\"id\": 3,\n" +
+                "\"description\": \"online\"\n" +
+                "},\n" +
+                "\"mapURL\": \"http://maps2.lordsandknights.com/v2/LKWorldServer-DE-15\",\n" +
+                "\"name\": \"Deutsch 15 (empfohlen)\"" +
+                "}\n" +
+                "]\n" +
+                "}\n";
+
+        UserLoginTask(Context context, String email, String password) {
+            mContext = context;
             mEmail = email;
             mPassword = password;
         }
@@ -323,7 +352,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 }
             }
 
+
             // TODO: register the new account here.
+            try {
+                worldList = new JSONObject(exampleString);
+            } catch (JSONException e) {
+                Log.e("GameApp", "Could not retrieve world list", e);
+                Toast.makeText(mContext, "Could not retrieve world list", Toast.LENGTH_LONG);
+                return false;
+            }
             return true;
         }
 
@@ -333,7 +370,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(false);
 
             if (success) {
-                finish();
+                Intent intent = new Intent(mContext, WorldsActivity.class);
+                intent.putExtra("WORLD_LIST", worldList.toString());
+                startActivity(intent);
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
