@@ -6,6 +6,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -33,6 +34,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -314,7 +316,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         private final Context mContext;
         private final String mEmail;
         private final String mPassword;
-        private JSONObject worldList = null;
+        private String serverVersion = null;
+        private List<WorldInfo> allAvailableWorlds = new ArrayList<>();
 
         private static final String jsonStringExample =
                 "{\n" +
@@ -392,10 +395,33 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 }
 
                 Log.d("GameApp", "Got string: " + jsonString);
-                worldList = new JSONObject(jsonStringExample);
-            } catch (IOException | JSONException e) {
+
+                jsonString = jsonStringExample; // for debug
+
+                try {
+                    JSONObject worldList = new JSONObject(jsonString);
+                    try {
+                        serverVersion = worldList.getString("serverVersion");
+                    } catch (JSONException e) {
+                        Log.e("GameApp", "Could not retrieve server verion", e); // not critical
+                    }
+                    JSONArray worlds = worldList.getJSONArray("allAvailableWorlds");
+                    for (int index = 0; index < worlds.length(); ++index) {
+                        try {
+                            WorldInfo info = new WorldInfo(worlds.getJSONObject(index));
+                            allAvailableWorlds.add(info);
+                        } catch (JSONException e) {
+                            Log.e("GameApp", "Could not parse game world data", e); // remove unavailable worlds
+                        }
+                    }
+                } catch (JSONException e) {
+                    Log.e("GameApp", "Could not revieve world data", e); // critical
+
+                    return false;
+                }
+            } catch (IOException e) {
                 // could not connect, print some toast
-                Log.e("GameApp", "Could not retrieve world list", e);
+                Log.e("GameApp", "Could not retrieve remote game data", e);
 
                 return false;
             }
@@ -410,10 +436,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
             if (success) {
                 Intent intent = new Intent(mContext, WorldsActivity.class);
-                intent.putExtra("WORLD_LIST", worldList.toString());
+                intent.putExtra("SERVER_VERSION", serverVersion);
+                intent.putExtra("WORLD_LIST", allAvailableWorlds.toArray(new WorldInfo[allAvailableWorlds.size()]));
                 startActivity(intent);
             } else {
-                Toast.makeText(mContext, "Could not authorize", Toast.LENGTH_LONG);
+                Toast.makeText(mContext, "Could not authorize", Toast.LENGTH_LONG).show();
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
             }

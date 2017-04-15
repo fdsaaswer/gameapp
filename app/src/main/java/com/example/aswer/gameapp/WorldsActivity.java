@@ -2,6 +2,7 @@ package com.example.aswer.gameapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -32,23 +33,20 @@ public class WorldsActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         if (intent!= null) {
-            try {
-                JSONObject worldList = new JSONObject(intent.getStringExtra("WORLD_LIST"));
-                worldList.getString("serverVersion");
-                JSONArray worlds = worldList.getJSONArray("allAvailableWorlds");
-                Log.d("GameApp", "Worlds num: " + worlds.length());
-                for (int i = 0; i < worlds.length(); i++) {
-                    JSONObject world = worlds.getJSONObject(i);
-                    String name = world.getString("name");
-
-                    Log.d("GameApp", "Got name: " + name);
-                    Button enterButton = new Button(this);
-                    enterButton.setText(name);
-                    content.addView(enterButton);
+            String serverVersion = intent.getStringExtra("SERVER_VERSION");
+            Parcelable[] worlds = intent.getParcelableArrayExtra("WORLD_LIST");
+            if (worlds == null) {
+                Log.e("GameApp", "Got no worlds");
+            } else
+            for (Parcelable parcelable: worlds) {
+                WorldInfo world = (WorldInfo) parcelable;
+                Button enterButton = new Button(this);
+                enterButton.setText(world.name);
+                // TODO change button style
+                if (!world.status.equals("online")) {
+                    enterButton.setEnabled(false);
                 }
-            } catch (JSONException e) {
-                Log.e("GameApp", "Failed to parse JSON string", e);
-                Toast.makeText(this, "Could not retrieve world list", Toast.LENGTH_LONG).show();
+                content.addView(enterButton);
             }
         } else {
             Log.e("GameApp", "Got no intent");
