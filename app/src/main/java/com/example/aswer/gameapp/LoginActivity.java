@@ -69,9 +69,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private static final int REQUEST_READ_CONTACTS = 0;
 
     /**
-     * Keep track of the login task to ensure we can cancel it if requested.
+     * Keep track of the auth task to ensure we can cancel it if requested.
      */
-    private UserLoginTask mAuthTask = null;
+    private WorldRequestTask mAuthTask = null;
 
     // UI references.
     private AutoCompleteTextView mEmailView;
@@ -202,7 +202,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(this, email, password);
+            mAuthTask = new WorldRequestTask(this, email, password);
             mAuthTask.execute((Void) null);
         }
     }
@@ -311,37 +311,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
      */
-    private class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
+    private class WorldRequestTask extends AsyncTask<Void, Void, Boolean> {
 
         private final Context mContext;
-        private final String mEmail;
-        private final String mPassword;
+        private final WorldRequest mRequest;
         private String serverVersion = null;
         private List<WorldInfo> allAvailableWorlds = new ArrayList<>();
 
-        private static final String jsonStringExample =
-                "{\n" +
-                "\"serverVersion\": \"1.0.\",\n" +
-                "\"allAvailableWorlds\": [\n" +
-                "{\n" +
-                "\"id\": \"118\",\n" +
-                "\"language\": \"de\",\n" +
-                "\"url\": \"http://backend2.lordsandknights.com/XYRALITY/WebObjects/LKWorldServer-DE-15.woa\",\n" +
-                "\"country\": \"DE\",\n" +
-                "\"worldStatus\": {\n" +
-                "\"id\": 3,\n" +
-                "\"description\": \"online\"\n" +
-                "},\n" +
-                "\"mapURL\": \"http://maps2.lordsandknights.com/v2/LKWorldServer-DE-15\",\n" +
-                "\"name\": \"Deutsch 15 (empfohlen)\"" +
-                "}\n" +
-                "]\n" +
-                "}\n";
-
-        UserLoginTask(Context context, String email, String password) {
+        WorldRequestTask(Context context, String email, String password) {
             mContext = context;
-            mEmail = email;
-            mPassword = password;
+            mRequest = new WorldRequest(email, password);
         }
 
         @Override
@@ -355,22 +334,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 conn.setDoInput(true);
                 conn.setDoOutput(true);
 
-                StringBuilder builder = new StringBuilder();
-                builder.append(URLEncoder.encode("email=" + mEmail, "UTF-8"));
-                builder.append(URLEncoder.encode("&password=" + mPassword, "UTF-8"));
-
-                OutputStream ostream = null;
-                BufferedWriter writer = null;
-                try {
-                    ostream = conn.getOutputStream();
-                    writer = new BufferedWriter(new OutputStreamWriter(ostream, "UTF-8")); // JSON is UTF-8
-                    writer.write(builder.toString());
-                    writer.flush();
-                    writer.close();
-                } finally {
-                    if (writer != null) writer.close();
-                    if (ostream != null) ostream.close();
-                }
+                Utils.connectionWrite(conn, mRequest.getRequest());
 
                 int responseCode = conn.getResponseCode();
                 if (responseCode != HttpsURLConnection.HTTP_OK &&
@@ -378,32 +342,18 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     throw new IOException("Bad response code" + responseCode);
                 }
 
-                String jsonString = null;
+                String jsonString = Utils.connectionRead(conn);
 
-                InputStream istream = null;
-                BufferedReader reader = null;
-                try {
-                    istream = conn.getInputStream();
-                    String line;
-                    reader = new BufferedReader(new InputStreamReader(istream));
-                    while ((line = reader.readLine()) != null) {
-                        jsonString += line;
-                    }
-                } finally {
-                    if (reader != null) reader.close();
-                    if (istream != null) istream.close();
-                }
+                Log.d(Utils.LOG_TAG, "Got string: " + jsonString);
 
-                Log.d("GameApp", "Got string: " + jsonString);
-
-                jsonString = jsonStringExample; // for debug
+                jsonString = Utils.JSON_STRING_EXAMPLE; // for debug
 
                 try {
                     JSONObject worldList = new JSONObject(jsonString);
                     try {
                         serverVersion = worldList.getString("serverVersion");
                     } catch (JSONException e) {
-                        Log.e("GameApp", "Could not retrieve server verion", e); // not critical
+                        Log.e(Utils.LOG_TAG, "Could not retrieve server verion", e); // not critical
                     }
                     JSONArray worlds = worldList.getJSONArray("allAvailableWorlds");
                     for (int index = 0; index < worlds.length(); ++index) {
@@ -411,17 +361,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                             WorldInfo info = new WorldInfo(worlds.getJSONObject(index));
                             allAvailableWorlds.add(info);
                         } catch (JSONException e) {
-                            Log.e("GameApp", "Could not parse game world data", e); // remove unavailable worlds
+                            Log.e(Utils.LOG_TAG, "Could not parse game world data", e); // remove unavailable worlds
                         }
                     }
                 } catch (JSONException e) {
-                    Log.e("GameApp", "Could not revieve world data", e); // critical
+                    Log.e(Utils.LOG_TAG, "Could not revieve world data", e); // critical
 
                     return false;
                 }
             } catch (IOException e) {
                 // could not connect, print some toast
-                Log.e("GameApp", "Could not retrieve remote game data", e);
+                Log.e(Utils.LOG_TAG, "Could not retrieve remote game data", e);
 
                 return false;
             }

@@ -36,12 +36,12 @@ public class WorldsActivity extends AppCompatActivity {
             String serverVersion = intent.getStringExtra("SERVER_VERSION");
             Parcelable[] worlds = intent.getParcelableArrayExtra("WORLD_LIST");
             if (worlds == null) {
-                Log.e("GameApp", "Got no worlds");
+                Log.e(Utils.LOG_TAG, "Got no worlds");
             } else
             for (Parcelable parcelable: worlds) {
                 WorldInfo world = (WorldInfo) parcelable;
                 Button enterButton = new Button(this);
-                enterButton.setText(world.name);
+                enterButton.setText(world.name); // TODO replace with custom layout with additional data
                 // TODO change button style
                 if (!world.status.equals("online")) {
                     enterButton.setEnabled(false);
@@ -49,7 +49,7 @@ public class WorldsActivity extends AppCompatActivity {
                 content.addView(enterButton);
             }
         } else {
-            Log.e("GameApp", "Got no intent");
+            Log.e(Utils.LOG_TAG, "Got no intent");
         }
     }
 }
