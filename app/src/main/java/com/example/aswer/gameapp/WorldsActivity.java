@@ -41,14 +41,14 @@ public class WorldsActivity extends AppCompatActivity {
                     JSONObject world = worlds.getJSONObject(i);
                     String name = world.getString("name");
 
-                    Log.d("GameApp", "Got name:" + name);
+                    Log.d("GameApp", "Got name: " + name);
                     Button enterButton = new Button(this);
                     enterButton.setText(name);
                     content.addView(enterButton);
                 }
             } catch (JSONException e) {
                 Log.e("GameApp", "Failed to parse JSON string", e);
-                Toast.makeText(this, "Could not retrieve world list", Toast.LENGTH_LONG);
+                Toast.makeText(this, "Could not retrieve world list", Toast.LENGTH_LONG).show();
             }
         } else {
             Log.e("GameApp", "Got no intent");

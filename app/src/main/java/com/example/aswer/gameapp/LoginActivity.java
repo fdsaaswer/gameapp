@@ -36,9 +36,24 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.net.ssl.HttpsURLConnection;
+
+import static android.Manifest.permission.INTERNET;
 import static android.Manifest.permission.READ_CONTACTS;
 
 /**
@@ -51,13 +66,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      */
     private static final int REQUEST_READ_CONTACTS = 0;
 
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "foo@example.com:hello", "bar@example.com:world"
-    };
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -117,7 +125,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             return true;
         }
         if (shouldShowRequestPermissionRationale(READ_CONTACTS)) {
-            Snackbar.make(mEmailView, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
+            Snackbar.make(mEmailView, R.string.contacts_permission_rationale, Snackbar.LENGTH_INDEFINITE)
                     .setAction(android.R.string.ok, new View.OnClickListener() {
                         @Override
                         @TargetApi(Build.VERSION_CODES.M)
@@ -301,14 +309,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
      */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
+    private class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
 
         private final Context mContext;
         private final String mEmail;
         private final String mPassword;
         private JSONObject worldList = null;
 
-        private static final String exampleString =
+        private static final String jsonStringExample =
                 "{\n" +
                 "\"serverVersion\": \"1.0.\",\n" +
                 "\"allAvailableWorlds\": [\n" +
@@ -335,32 +343,63 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
-
             try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
-            }
+                URL url = new URL("https://jsonplaceholder.typicode.com/posts");
+                HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+                conn.setReadTimeout(10000);
+                conn.setConnectTimeout(15000);
+                conn.setRequestMethod("POST");
+                conn.setDoInput(true);
+                conn.setDoOutput(true);
 
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
+                StringBuilder builder = new StringBuilder();
+                builder.append(URLEncoder.encode("email=" + mEmail, "UTF-8"));
+                builder.append(URLEncoder.encode("&password=" + mPassword, "UTF-8"));
+
+                OutputStream ostream = null;
+                BufferedWriter writer = null;
+                try {
+                    ostream = conn.getOutputStream();
+                    writer = new BufferedWriter(new OutputStreamWriter(ostream, "UTF-8")); // JSON is UTF-8
+                    writer.write(builder.toString());
+                    writer.flush();
+                    writer.close();
+                } finally {
+                    if (writer != null) writer.close();
+                    if (ostream != null) ostream.close();
                 }
-            }
 
+                int responseCode = conn.getResponseCode();
+                if (responseCode != HttpsURLConnection.HTTP_OK &&
+                        responseCode != HttpsURLConnection.HTTP_CREATED) {
+                    throw new IOException("Bad response code" + responseCode);
+                }
 
-            // TODO: register the new account here.
-            try {
-                worldList = new JSONObject(exampleString);
-            } catch (JSONException e) {
+                String jsonString = null;
+
+                InputStream istream = null;
+                BufferedReader reader = null;
+                try {
+                    istream = conn.getInputStream();
+                    String line;
+                    reader = new BufferedReader(new InputStreamReader(istream));
+                    while ((line = reader.readLine()) != null) {
+                        jsonString += line;
+                    }
+                } finally {
+                    if (reader != null) reader.close();
+                    if (istream != null) istream.close();
+                }
+
+                Log.d("GameApp", "Got string: " + jsonString);
+                worldList = new JSONObject(jsonStringExample);
+            } catch (IOException | JSONException e) {
+                // could not connect, print some toast
                 Log.e("GameApp", "Could not retrieve world list", e);
-                Toast.makeText(mContext, "Could not retrieve world list", Toast.LENGTH_LONG);
+
                 return false;
             }
+
             return true;
         }
 
@@ -374,6 +413,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 intent.putExtra("WORLD_LIST", worldList.toString());
                 startActivity(intent);
             } else {
+                Toast.makeText(mContext, "Could not authorize", Toast.LENGTH_LONG);
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
             }
