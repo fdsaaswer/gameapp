@@ -57,7 +57,7 @@ class Utils {
         try {
             istream = connection.getInputStream();
             String line;
-            reader = new BufferedReader(new InputStreamReader(istream));
+            reader = new BufferedReader(new InputStreamReader(istream, "UTF-8"));
             while ((line = reader.readLine()) != null) {
                 builder.append(line);
             }

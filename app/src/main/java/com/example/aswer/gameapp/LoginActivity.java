@@ -6,6 +6,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Environment;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -37,15 +38,19 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
@@ -57,6 +62,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 import static android.Manifest.permission.INTERNET;
 import static android.Manifest.permission.READ_CONTACTS;
+import static android.util.JsonToken.NULL;
 
 /**
  * A login screen that offers login via email/password.
@@ -327,14 +333,20 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         protected Boolean doInBackground(Void... params) {
             try {
                 URL url = new URL(Utils.SERVER_URL);
-                HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setReadTimeout(10000);
                 conn.setConnectTimeout(15000);
                 conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+
+                conn.setRequestProperty("Content-Length",
+                        Integer.toString(mRequest.getRequest().getBytes().length));
+                conn.setRequestProperty("Content-Language", "en-GB");
                 conn.setDoInput(true);
                 conn.setDoOutput(true);
 
                 Utils.connectionWrite(conn, mRequest.getRequest());
+                Log.d(Utils.LOG_TAG, "request string: " + mRequest.getRequest());
 
                 int responseCode = conn.getResponseCode();
                 if (responseCode != HttpsURLConnection.HTTP_OK &&
@@ -345,16 +357,43 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                 String jsonString = Utils.connectionRead(conn);
 
-                Log.d(Utils.LOG_TAG, "Got string: " + jsonString); // debug
+                try {
+                    File newFolder = new File(Environment.getExternalStorageDirectory(), "TestFolder");
+                    if (!newFolder.exists()) {
+                        newFolder.mkdir();
+                    }
+                    File file = new File(newFolder, "worlds.json");
+                    file.createNewFile();
+                    OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(file));
+                    outputStreamWriter.write(jsonString);
+                    outputStreamWriter.close();
+                } catch (IOException e) {
+                    Log.e("Exception", "File write failed: " + e.toString());
+                }
+
+                /*try {
+                    JSONTokener tokener = new JSONTokener(jsonString);
+                    String str;
+                    while (!(str = tokener.nextString('\"')).isEmpty()) {
+                        Log.d(Utils.LOG_TAG, str);
+                    }
+                } catch (Exception e) {
+                    Log.e(Utils.LOG_TAG, "Got exception", e);
+                }*/
+
+                // TODO parse error string
 
                 try {
-                    JSONObject worldList = new JSONObject(jsonString);
+                    JSONObject worldList = new JSONObject(jsonString.replaceAll("\\s+","").replaceAll("\\(","[").replaceAll("\\)","]").replaceAll(";", ",").
+                            replaceAll("\\,\\}", "\\}"));
                     try {
                         serverVersion = worldList.getString("serverVersion");
                     } catch (JSONException e) {
-                        Log.e(Utils.LOG_TAG, "Could not retrieve server verion", e); // not critical
+                        Log.e(Utils.LOG_TAG, "Could not retrieve server version", e); // not critical
                     }
+
                     JSONArray worlds = worldList.getJSONArray("allAvailableWorlds");
+
                     for (int index = 0; index < worlds.length(); ++index) {
                         try {
                             WorldInfo info = new WorldInfo(worlds.getJSONObject(index));
@@ -364,7 +403,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         }
                     }
                 } catch (JSONException e) {
-                    Log.e(Utils.LOG_TAG, "Could not revieve world data", e); // critical
+                    Log.e(Utils.LOG_TAG, "Could not retrieve world data", e); // critical
 
                     return false;
                 }

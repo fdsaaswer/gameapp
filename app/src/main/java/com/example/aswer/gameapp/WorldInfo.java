@@ -17,7 +17,7 @@ final class WorldInfo implements Parcelable {
     public final String language;
     public final String url; // add validity checks?
     public final String country;
-    public final int statusId;
+    public final String statusId;
     public final String status; // replace with enum?
     public final String mapUrl; // add validity checks?
     public final String name;
@@ -30,7 +30,7 @@ final class WorldInfo implements Parcelable {
         this.url      = worldDescription.getString("url");
         this.country  = worldDescription.getString("country");
         JSONObject statusObject = worldDescription.getJSONObject("worldStatus");
-        this.statusId = statusObject.getInt("id");
+        this.statusId = statusObject.getString("id");
         this.status   = statusObject.getString("description");
         this.mapUrl   = worldDescription.getString("mapURL");
         this.name     = worldDescription.getString("name");
@@ -41,7 +41,7 @@ final class WorldInfo implements Parcelable {
         this.language = from.readString();
         this.url      = from.readString();
         this.country  = from.readString();
-        this.statusId = from.readInt();
+        this.statusId = from.readString();
         this.status   = from.readString();
         this.mapUrl   = from.readString();
         this.name     = from.readString();
@@ -58,7 +58,7 @@ final class WorldInfo implements Parcelable {
         to.writeString(this.language);
         to.writeString(this.url);
         to.writeString(this.country);
-        to.writeInt(this.statusId);
+        to.writeString(this.statusId);
         to.writeString(this.status);
         to.writeString(this.mapUrl);
         to.writeString(this.name);

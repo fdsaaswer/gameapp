@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -42,6 +43,9 @@ public class WorldsActivity extends AppCompatActivity {
                 WorldInfo world = (WorldInfo) parcelable;
                 Button enterButton = new Button(this);
                 enterButton.setText(world.name); // TODO replace with custom layout with additional data
+
+                Log.d(Utils.LOG_TAG, "name: " + world.name + " status: " + world.status);
+
                 // TODO change button style
                 if (!world.status.equals("online")) {
                     enterButton.setEnabled(false);

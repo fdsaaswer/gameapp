@@ -13,6 +13,6 @@
     <string name="contacts_permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
-    <string name="title_activity_worlds">Available game worlds</string>
+    <string name="title_activity_worlds">Game worlds</string>
     <string name="action_settings">Settings</string>
 </resources>

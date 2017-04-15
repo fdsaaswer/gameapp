@@ -22,8 +22,6 @@ final class WorldRequest {
         this.password = password;
         this.deviceType = String.format("%s %s", Build.MODEL, Build.VERSION.RELEASE);
         this.deviceId = getDeviceId();
-        Log.d(Utils.LOG_TAG, "device id 1: " + Settings.Secure.ANDROID_ID);
-        Log.d(Utils.LOG_TAG, "device id 2: " + getDeviceId());
     }
 
     private static String getDeviceId() {
@@ -59,10 +57,10 @@ final class WorldRequest {
 
     String getRequest() throws UnsupportedEncodingException {
         StringBuilder builder = new StringBuilder();
-        builder.append(URLEncoder.encode("login=" + login, "UTF-8"));
-        builder.append(URLEncoder.encode("&password=" + password, "UTF-8"));
-        builder.append(URLEncoder.encode("&deviceType=" + deviceType, "UTF-8"));
-        builder.append(URLEncoder.encode("&deviceId=" + deviceId, "UTF-8"));
+        builder.append("login=" + login);
+        builder.append("&password=" + password);
+        builder.append("&deviceType=" + deviceType);
+        builder.append("&deviceId=" + deviceId);
         return builder.toString();
     }
 }
