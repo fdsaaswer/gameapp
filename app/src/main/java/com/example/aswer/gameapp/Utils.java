@@ -12,6 +12,9 @@ import java.net.URLConnection;
 
 class Utils {
     static final String LOG_TAG = "GameApp";
+    static final String EXTRA_VERSION = "SERVER_VERSION";
+    static final String EXTRA_WORLDS = "WORLD_LIST";
+    static final String SERVER_URL = "http://backend1.lordsandknights.com/XYRALITY/WebObjects/BKLoginServer.woa/wa/worlds";
 
     static final String JSON_STRING_EXAMPLE =
             "{\n" +

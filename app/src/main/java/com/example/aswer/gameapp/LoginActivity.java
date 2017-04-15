@@ -326,7 +326,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         @Override
         protected Boolean doInBackground(Void... params) {
             try {
-                URL url = new URL("https://jsonplaceholder.typicode.com/posts");
+                URL url = new URL(Utils.SERVER_URL);
                 HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
                 conn.setReadTimeout(10000);
                 conn.setConnectTimeout(15000);
@@ -339,14 +339,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 int responseCode = conn.getResponseCode();
                 if (responseCode != HttpsURLConnection.HTTP_OK &&
                         responseCode != HttpsURLConnection.HTTP_CREATED) {
+                    // TODO dump error data for debug
                     throw new IOException("Bad response code" + responseCode);
                 }
 
                 String jsonString = Utils.connectionRead(conn);
 
-                Log.d(Utils.LOG_TAG, "Got string: " + jsonString);
-
-                jsonString = Utils.JSON_STRING_EXAMPLE; // for debug
+                Log.d(Utils.LOG_TAG, "Got string: " + jsonString); // debug
 
                 try {
                     JSONObject worldList = new JSONObject(jsonString);
@@ -386,8 +385,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
             if (success) {
                 Intent intent = new Intent(mContext, WorldsActivity.class);
-                intent.putExtra("SERVER_VERSION", serverVersion);
-                intent.putExtra("WORLD_LIST", allAvailableWorlds.toArray(new WorldInfo[allAvailableWorlds.size()]));
+                intent.putExtra(Utils.EXTRA_VERSION, serverVersion);
+                intent.putExtra(Utils.EXTRA_WORLDS, allAvailableWorlds.toArray(new WorldInfo[allAvailableWorlds.size()]));
                 startActivity(intent);
             } else {
                 Toast.makeText(mContext, "Could not authorize", Toast.LENGTH_LONG).show();

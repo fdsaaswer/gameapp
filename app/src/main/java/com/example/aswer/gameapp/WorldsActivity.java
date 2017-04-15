@@ -33,8 +33,8 @@ public class WorldsActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         if (intent!= null) {
-            String serverVersion = intent.getStringExtra("SERVER_VERSION");
-            Parcelable[] worlds = intent.getParcelableArrayExtra("WORLD_LIST");
+            String serverVersion = intent.getStringExtra(Utils.EXTRA_VERSION);
+            Parcelable[] worlds = intent.getParcelableArrayExtra(Utils.EXTRA_WORLDS);
             if (worlds == null) {
                 Log.e(Utils.LOG_TAG, "Got no worlds");
             } else
