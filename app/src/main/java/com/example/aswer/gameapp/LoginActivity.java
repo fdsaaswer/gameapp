@@ -385,7 +385,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                 try {
                     JSONObject worldList = new JSONObject(jsonString.replaceAll("\\s+","").replaceAll("\\(","[").replaceAll("\\)","]").replaceAll(";", ",").
-                            replaceAll("\\,\\}", "\\}"));
+                            replaceAll("\\,\\}", "\\}").replaceAll("\\\\U", "\\\\u"));
                     try {
                         serverVersion = worldList.getString("serverVersion");
                     } catch (JSONException e) {
@@ -393,7 +393,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     }
 
                     JSONArray worlds = worldList.getJSONArray("allAvailableWorlds");
-
                     for (int index = 0; index < worlds.length(); ++index) {
                         try {
                             WorldInfo info = new WorldInfo(worlds.getJSONObject(index));

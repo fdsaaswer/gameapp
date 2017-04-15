@@ -44,7 +44,7 @@ public class WorldsActivity extends AppCompatActivity {
                 Button enterButton = new Button(this);
                 enterButton.setText(world.name); // TODO replace with custom layout with additional data
 
-                Log.d(Utils.LOG_TAG, "name: " + world.name + " status: " + world.status);
+                //Log.d(Utils.LOG_TAG, "name: " + world.name + " status: " + world.status);
 
                 // TODO change button style
                 if (!world.status.equals("online")) {
