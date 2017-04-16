@@ -6,8 +6,11 @@ import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 /*
  * Activity to show list of available game worlds
@@ -41,14 +44,18 @@ public class WorldsActivity extends AppCompatActivity {
             } else
             for (Parcelable parcelable: worlds) {
                 WorldInfo world = (WorldInfo) parcelable;
-                Button enterButton = new Button(this);
-                enterButton.setText(world.name); // TODO replace with custom layout with additional data
 
-                // TODO change button style
-                if (!world.status.equals("online")) {
-                    enterButton.setEnabled(false);
-                }
-                content.addView(enterButton);
+                View view = LayoutInflater.from(this).inflate(R.layout.world_layout, null);
+                ((TextView) view.findViewById(R.id.name)).setText(world.name);
+                ((TextView) view.findViewById(R.id.description)).setText(
+                        "URL: " + world.url + "\n" + "Map URL: " + world.mapUrl
+                );
+                ((TextView) view.findViewById(R.id.locale)).setText(
+                        "Locale: " + world.language + ":" + world.country
+                );
+                ((Button) view.findViewById(R.id.enter_button)).setEnabled(world.status.equals("online"));
+
+                content.addView(view);
             }
         } else {
             Log.e(Utils.LOG_TAG, "Got no intent");

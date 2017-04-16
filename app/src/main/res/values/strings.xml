@@ -15,4 +15,5 @@
     </string>
     <string name="title_activity_worlds">Game worlds</string>
     <string name="action_settings">Settings</string>
+    <string name="enter_button">Enter the world</string>
 </resources>
