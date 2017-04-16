@@ -1,0 +1,69 @@
+Simple utility for retrieving and showing list of available game worlds
+
+
+1. LoginActivity.java
+
+LoginActivity is mostly default Android class, the main change is WorldRequestTask
+WorldRequestTask is responsible for async communication with remote server
+ - Prepares Request class that encapsulates all information we need to send
+ - Maintains HTTP connection (200 and 202 are treated as OK)
+ - Parses the result
+ - Sends Intent to start WorldsActivity with world list sent via Parcelables
+To reduce clutter, most of actual logic code was refactored and put into Utils
+
+Further work:
+! sending password via HTTP is not good -> use HTTPS
+Using separate class for WorldRequestTask would make sense, but since it is an asyncTask it has tight
+coupling with main activity - can be further refactored using callbacks
+
+
+2. Utils.java
+Utility class
+Holds some package-wide constants like LOG_TAG and EXTRA_* names for Intent
+Holds JSON canonization code, since actual web service uses malformed JSON
+Holds server connection methods
+
+Further work:
+JSON canonization is somewhat covered by unit tests, should be covered better (=
+Connection code should be tested better too, but pretty standard approach is used, so no issues expected
+
+
+3. WorldsActivity
+Separate activity that holds and shows World data
+This is the place, where connection to the world should be initiated
+Has all the necessary world information for connect, and does not rely on JSON
+
+Further work:
+Since we get information from intent, some safety/verification measures could be added here
+But world server is supposed to do all the security checks, we can just trust all the intents on client side
+
+
+4. WorldInfo.java
+Parcelable. Using parcelables for marshalling is a standard way in Android
+Same data can then be shared with other services/native code etc.
+Also, good place to put validations to
+
+Further work:
+Verify URL validity? Replace Strings with enum?
+Alternatively, reduce code duplication by hard-coding list of available fields and using map?
+
+
+5. WorldRequest.java
+Helper class to hold all information needed for authorization/world request
+Retrieves MAC via first available network interface and uses it as unique device ID
+ANDROID_ID does not seem to be reliable
+
+Further work:
+Cover with unit tests? Not much sense, since all the code to test is device specific
+System testing should do for now
+
+
+
+
+TODO System testing:
+ - unavailable server
+ - unauthorized user
+ - no worlds available
+ - older devices
+ - tablet devices
+ - resource leaks (unclosed readers, connections, etc)
