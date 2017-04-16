@@ -13,18 +13,18 @@ import org.json.JSONObject;
  * This class also should be used for validity checks
  */
 final class WorldInfo implements Parcelable {
-    public final String id; // weird that id is not int, but oh well
-    public final String language;
-    public final String url; // add validity checks?
-    public final String country;
-    public final String statusId;
-    public final String status; // replace with enum?
-    public final String mapUrl; // add validity checks?
-    public final String name;
+    // TODO replace all arguments with map and hard-coded list of strings "FIELDS"
+
+    final String id; // weird that id is not int, but oh well
+    final String language;
+    final String url; // add validity checks?
+    final String country;
+    final String statusId;
+    final String status; // replace with enum?
+    final String mapUrl; // add validity checks?
+    final String name;
 
     WorldInfo(JSONObject worldDescription) throws JSONException {
-        // we can remove code duplication here by using some of the java 8 features
-        // but it's not fully supported everywhere yet
         this.id       = worldDescription.getString("id");
         this.language = worldDescription.getString("language");
         this.url      = worldDescription.getString("url");
@@ -73,4 +73,22 @@ final class WorldInfo implements Parcelable {
             return new WorldInfo[size];
         }
     };
+
+    @Override
+    public boolean equals(Object otherObject) {
+        if (!(otherObject instanceof  WorldInfo))
+            return super.equals(otherObject);
+        WorldInfo other = (WorldInfo) otherObject;
+
+        if (!this.id.equals(other.id)) return false;
+        if (!this.language.equals(other.language)) return false;
+        if (!this.url.equals(other.url)) return false;
+        if (!this.country.equals(other.country)) return false;
+        if (!this.statusId.equals(other.statusId)) return false;
+        if (!this.status.equals(other.status)) return false;
+        if (!this.mapUrl.equals(other.mapUrl)) return false;
+        if (!this.name.equals(other.name)) return false;
+
+        return true;
+    }
 }

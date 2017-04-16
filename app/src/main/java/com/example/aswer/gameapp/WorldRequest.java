@@ -1,34 +1,47 @@
 package com.example.aswer.gameapp;
 
 import android.os.Build;
-import android.provider.Settings;
 import android.util.Log;
 
-import java.io.UnsupportedEncodingException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.List;
 
+/*
+ * Container for everything related to server request
+ * deviceId/deviceType retrieval is subject to modification
+ */
+
 final class WorldRequest {
-    public final String login;
-    public final String password;
-    public final String deviceType;
-    public final String deviceId;
+    private final String login;
+    private final String password;
+    private final String deviceType;
+    private final String deviceId;
 
     WorldRequest(String email, String password) {
         this.login = email;
         this.password = password;
-        this.deviceType = String.format("%s %s", Build.MODEL, Build.VERSION.RELEASE);
+        this.deviceType = getDeviceType();
         this.deviceId = getDeviceId();
     }
 
+    private static String getDeviceType() {
+        return String.format("%s %s", Build.MODEL, Build.VERSION.RELEASE);
+    }
+
+    /*
+     * BT and WiFi MACs are usually different
+     * Some devices may not support all interfaces?
+     * Anyway, it's unusual for device to support interface at one point of time
+     * and not support in other
+     * so just ask all of the interfaces, and send the first viable MAC found
+     */
     private static String getDeviceId() {
         List<NetworkInterface> interfaces;
         try {
             interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
-            if (interfaces == null || interfaces.size() == 0) {
+            if (interfaces.size() == 0) {
                 throw new IllegalStateException("Empty interfaces list");
             }
         } catch (SocketException | IllegalStateException e) {
@@ -55,12 +68,13 @@ final class WorldRequest {
         return null;
     }
 
-    String getRequest() throws UnsupportedEncodingException {
-        StringBuilder builder = new StringBuilder();
-        builder.append("login=" + login);
-        builder.append("&password=" + password);
-        builder.append("&deviceType=" + deviceType);
-        builder.append("&deviceId=" + deviceId);
-        return builder.toString();
+    @Override
+    public String toString() {
+        String result = new String(); // safe to use String here, compiler is smart
+        result += "login=" + login;
+        result += "&password=" + password;
+        result += "&deviceType=" + deviceType;
+        result += "&deviceId=" + deviceId;
+        return result;
     }
 }

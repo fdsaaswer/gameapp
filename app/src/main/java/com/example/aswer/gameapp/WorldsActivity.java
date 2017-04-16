@@ -3,22 +3,22 @@ package com.example.aswer.gameapp;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+/*
+ * Activity to show list of available game worlds
+ * Scrollable
+ * List of worlds is received as array of parcelable objects
+ * and can be sent to native/remote service
+ * no JSON parsing is needed at this point
+ * instead of showing just button, we can put more stuff here:
+ * world status, map url
+ * but more information is needed to determine whether that makes sense
+ */
 
 public class WorldsActivity extends AppCompatActivity {
 
