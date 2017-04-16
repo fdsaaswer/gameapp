@@ -94,16 +94,23 @@ public class UtilsUnitTest {
     }
 
     @Test
-    public void utilsCanonizeJson_replace_3() { // remove comma at the end
+    public void utilsCanonizeJson_replace_3() { // change parentheses
+        String jsonString = "{({\"key\":\"value\"})}";
+        String canonicalJsonString = "{[{\"key\":\"value\"}]}";
+        assertEquals(canonicalJsonString, Utils.canonizeJson(jsonString));
+    }
+
+    @Test
+    public void utilsCanonizeJson_replace_4() { // remove comma at the end
         String jsonString = "{\"key\":\"value\",}";
         String canonicalJsonString = "{\"key\":\"value\"}";
         assertEquals(canonicalJsonString, Utils.canonizeJson(jsonString));
     }
 
     @Test
-    public void utilsCanonizeJson_replace_4() { // change parentheses
-        String jsonString = "{({\"key\":\"value\"})}";
-        String canonicalJsonString = "{[{\"key\":\"value\"}]}";
+    public void utilsCanonizeJson_replace_5() { // remove comma at the end
+        String jsonString = "{\"dict\":{\"key\":\"value\",},}";
+        String canonicalJsonString = "{\"dict\":{\"key\":\"value\"}}";
         assertEquals(canonicalJsonString, Utils.canonizeJson(jsonString));
     }
 

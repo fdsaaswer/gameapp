@@ -309,7 +309,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         @Override
         protected Boolean doInBackground(Void... params) {
             String jsonString = Utils.getJsonFromServer(mRequest);
-            Utils.printDebug(jsonString); // debug
             try {
                 JSONObject worldList = new JSONObject(Utils.canonizeJson(jsonString));
                 try {
@@ -326,7 +325,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         WorldInfo info = new WorldInfo(worlds.getJSONObject(index));
                         allAvailableWorlds.add(info);
                     } catch (JSONException e) {
-                        Log.e(Utils.LOG_TAG, "Could not parse game world data", e); // remove unavailable worlds
+                        Log.e(Utils.LOG_TAG, "Could not parse game world data", e); // ignore malformed WorldInfo
                     }
                 }
             } catch (JSONException e) {

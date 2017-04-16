@@ -17,10 +17,10 @@ final class WorldInfo implements Parcelable {
 
     final String id; // weird that id is not int, but oh well
     final String language;
-    final String url; // add validity checks?
+    final String url; // add validity checks? e.g. try parsing as URL
     final String country;
-    final String statusId;
-    final String status; // replace with enum?
+    final String statusId; // weird that id is not int, but oh well
+    final String status; // replace with enum? need to see server side code for that
     final String mapUrl; // add validity checks?
     final String name;
 

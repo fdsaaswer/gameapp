@@ -3,6 +3,8 @@ package com.example.aswer.gameapp;
 import android.os.Environment;
 import android.util.Log;
 
+import org.json.JSONTokener;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -31,23 +33,38 @@ class Utils {
     static final String SERVER_URL = "http://backend1.lordsandknights.com/XYRALITY/WebObjects/BKLoginServer.woa/wa/worlds";
 
     static String canonizeJson(String jsonString) {
-                /*try {
-                    JSONTokener tokener = new JSONTokener(jsonString);
-                    String str;
-                    while (!(str = tokener.nextString('\"')).isEmpty()) {
-                        Log.d(Utils.LOG_TAG, str);
-                    }
-                } catch (Exception e) {
-                    Log.e(Utils.LOG_TAG, "Got exception", e);
-                }*/
-        return jsonString.
-                replaceAll("\\s+","").
-                replaceAll("\\(","[").
-                replaceAll("\\)","]").
-                replaceAll(";", ",").
-                replaceAll("=", ":").
-                replaceAll("\\,\\}", "\\}").
-                replaceAll("\\\\U", "\\\\u");
+        StringBuilder canonicalJsonString = new StringBuilder();
+        boolean text = false;
+        boolean escaped = false;
+        int posComma = -1;
+        for (int i = 0; i < jsonString.length(); ++i) {
+            char c = jsonString.charAt(i);
+            // ignore escaped/nested " for now (YAGNI and all that jazz)
+            if (c == '\"') text = !text;
+
+            // replace with canonical symbols
+            if (c == '=' && !text) c = ':';
+            if (c == '(' && !text) c = '[';
+            if (c == ')' && !text) c = ']';
+            if (c == ';' && !text) c = ',';
+
+            // remove last comma before }
+            if (c == '}' && posComma != -1) {
+                canonicalJsonString.deleteCharAt(posComma);
+                posComma = -1;
+            }
+            if (c == ',' && !text) {
+                posComma = canonicalJsonString.length();
+            } else if (c != ' ' && c != '\t' && c != '\n' && c != '\r') posComma = -1;
+
+            // replace \\U with \\u as Java String expects
+            if (c == 'U' && escaped) c = 'u';
+            escaped = (c == '\\');
+
+
+            canonicalJsonString.append(c);
+        }
+        return canonicalJsonString.toString();
     }
 
     static void connectionWrite(URLConnection connection, String value) throws IOException {
@@ -127,22 +144,6 @@ class Utils {
             return null;
         } finally {
             conn.disconnect();
-        }
-    }
-
-    static void printDebug(String debugInfo) { // debug
-        try {
-            File newFolder = new File(Environment.getExternalStorageDirectory(), "TestFolder");
-            if (!newFolder.exists()) {
-                newFolder.mkdir();
-            }
-            File file = new File(newFolder, "worlds.json");
-            file.createNewFile();
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(file));
-            outputStreamWriter.write(debugInfo);
-            outputStreamWriter.close();
-        } catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
         }
     }
 }
